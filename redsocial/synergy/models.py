@@ -8,11 +8,22 @@ class User(AbstractUser):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     follows = models.ManyToManyField("self", related_name="following", symmetrical=False, blank=True)
-    avatar = models.ImageField(upload_to="users/", default="users/profile.jpg", null=True, blank=True)
+    avatar = models.ImageField(upload_to="users/", default="users/default-profile.jpg", null=True, blank=True)
     bio = models.TextField()
 
     def __str__(self):
         return self.user.username
+    
+    def follows_count(self):
+        user_following = Profile.objects.filter(follows=self)
+        return user_following.count()
+
+class Post(models.Model):
+    user = models.ForeignKey()
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    publish = models.DateTimeField(auto_now_add=True)
+    
 
 
 def create_user_profile(sender, instance, created, **kwargs):

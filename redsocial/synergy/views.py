@@ -3,7 +3,8 @@ from .forms import RegisterForm, LoginForm
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .models import Profile
-from django.views.generic import ListView, DetailView
+from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, UpdateView
 
 class ProfileListView(ListView):
     model = Profile
@@ -13,6 +14,32 @@ class ProfileListView(ListView):
 class ProfileDetailView(DetailView):
     model = Profile
     template_name = "app/profile_detail.html"
+
+class ProfileUpdateView(UpdateView):
+    model = Profile
+    fields = ['bio',]
+    success_url = "/"
+    template_name = "app/profile_update.html"
+
+class ProfileDetailView(DetailView):
+    model = Profile
+    template_name = "app/profile_principal.html"
+
+@login_required
+def follow(request, pk):
+    profile = Profile.objects.get(pk=pk)
+    if request.method == "POST":
+        user = request.user.profile
+        data = request.POST
+        action = data.get('follow')
+        if action == "follow":
+            user.follows.add(profile)
+        elif action == "unfollow":
+           user.follows.remove(profile)
+        user.save()
+    return render(request, "app/profile_detail.html", {'profile':profile})
+                
+
 
 
 def index(request):
@@ -60,5 +87,7 @@ def sign_out(request):
     logout(request)
     messages.success(request, f'You have been logget out')
     return redirect('login')
+
+
 
 
